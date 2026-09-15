@@ -1,0 +1,8 @@
+# LLM 自动生成测试用例服务 —— 依赖清单
+# 安装：pip install -r requirements.txt
+
+fastapi==0.140.13
+uvicorn==0.51.0
+requests==2.33.1
+python-dotenv==1.2.1
+pydantic==2.13.2
