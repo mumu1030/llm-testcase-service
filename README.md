@@ -17,6 +17,7 @@
 | 一键导出 | 将某次生成结果拼接成完整 Markdown 文本 |
 | 稳定性 | LLM 调用带自动重试：超时重试、429 限流指数退避 |
 | 自动文档 | FastAPI 自带交互式接口文档（Swagger UI），无需手写 |
+| 接口测试 | 附 Postman 集合（10 个请求 / 32 条断言，含正常与异常流程），支持 Collection Runner 与 Newman 命令行执行 |
 
 ---
 
@@ -28,6 +29,7 @@
 - **requests**（调用 LLM HTTP 接口）
 - **python-dotenv**（管理密钥）
 - **DeepSeek API**（`deepseek-chat` 模型）
+- **Postman / Newman**（接口测试集合与命令行执行，依赖 Node.js）
 
 ---
 
@@ -45,7 +47,7 @@ llm-testcase-service/
 │   ├── llm_client.py                         # 大模型调用客户端（含重试机制）
 │   └── prompt_builder.py                     # prompt 构建器（拼装提示词）
 ├── postman/
-│   └── llm-testcase-service.postman_collection.json   # Postman 集合，导入即用
+│   └── llm-testcase-service.postman_collection.json   # 接口测试集合（10 请求 / 32 断言）
 ├── tests/                                    # 预留：自动化测试目录
 ├── requirements.txt                          # 依赖清单
 ├── .env                                      # 密钥配置（已在 .gitignore 中忽略）
@@ -147,14 +149,54 @@ uvicorn main:app --reload
 
 ---
 
-## 用 Postman 调试
+## 接口测试
+
+测试集合位于 `postman/`，包含 **10 个请求 / 32 条断言**，覆盖正常流程与异常流程两条主线。
+
+### 用 Postman 调试
 
 1. 打开 Postman → **Import** → 选择本仓库中的
    `postman/llm-testcase-service.postman_collection.json`
 2. 集合已内置变量 `base_url`（默认 `http://127.0.0.1:8000`），
-   如需更换端口，只改变量即可，5 个请求会一起生效。
-3. 建议按序号顺序执行：**01 生成用例** → **02 查询历史列表** →
-   **03 查询单条** → **04 删除** → **05 导出 Markdown**。
+   如需更换端口，只改变量即可，所有请求会一起生效。
+3. 集合分为两个文件夹：
+
+   | 文件夹 | 请求 | 验证目标 |
+   |--------|------|---------|
+   | **正常流程** | 01 生成用例 → 02 查询历史列表 → 03 查询单条记录 → 04 导出 Markdown → 05 删除记录 | 功能正确性与跨接口数据一致性 |
+   | **异常流程** | E1 参数越界 → E2 缺必填 → E3 参数值为空 → E4 下限为 0 → E5 查询不存在的记录 | 参数校验（422）与业务兜底（404）|
+
+4. **⚠️ 请求之间有依赖，必须按顺序执行**：`01 生成用例` 会把返回的 `id` 写入集合变量
+   `record_id`，后续请求通过 `{{record_id}}` 引用。单独执行 03/04/05 会因变量缺失而失败。
+5. 删除是破坏性操作，排在正常流程**最后**；导出必须排在删除**之前**。
+6. 每个请求的断言写在 **Scripts → Post-response**，执行后在 **Test Results** 查看绿勾/红叉。
+
+### 用 Collection Runner 批量执行
+
+点击集合右侧 `...` → **Run collection**，会按顺序执行全部 10 个请求、32 条断言。
+
+### 用 Newman 命令行执行
+
+[Newman](https://github.com/postmanlabs/newman) 是 Postman 官方的命令行执行工具，读取同一份集合文件，
+适用于本地批量回归，也可接入 CI 流水线：
+
+```bash
+npm install -g newman
+
+newman run postman/llm-testcase-service.postman_collection.json \
+  --env-var "base_url=http://127.0.0.1:8000" \
+  -r cli,json \
+  --reporter-json-export reports/newman-report.json
+```
+
+预期输出（`--env-var` 用于给 `{{base_url}}` 传值，命令行环境下无需依赖 Postman 界面）：
+
+```
+requests      10    failed 0
+assertions    32    failed 0
+```
+
+> 注：`01 生成用例` 会真实调用大模型，单次耗时数秒；其余请求均为毫秒级，整轮约 4～20 秒。
 
 ---
 

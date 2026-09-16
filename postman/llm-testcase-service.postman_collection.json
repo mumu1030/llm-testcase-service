@@ -7,118 +7,378 @@
   },
   "item": [
     {
-      "name": "01 生成用例",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "{\n    \"feature\":\"login\",\n    \"platform\":\"Android\",\n    \"test_types\":[\"normal\",\"exception\",\"boundary\",\"security\"],\n    \"case_count\":5\n}",
-          "options": {
-            "raw": {
-              "language": "json"
+      "name": "正常流程",
+      "item": [
+        {
+          "name": "01 生成用例",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"状态码 200\", () => pm.response.to.have.status(200));\n\nconst body = pm.response.json();\n\npm.test(\"返回结构字段正确\", () => {pm.expect(body).to.include.keys(\"id\", \"feature\", \"platform\",\"test_types\", \"case_count\", \"cases\", \"created_at\")});\n\npm.test(\"生成1种类型\",() => {\n    pm.expect(body.test_types).to.have.length(1);\n});\n\npm.test(\"生成的用例内容非空\", () => {\n    pm.expect(body.cases.normal.length).to.be.above(50);   // 长度断言（应对不确定性）\n});\n\n// ★ 把 id,feature 存成变量，供后面的请求复用 —— 这叫\"接口关联\"\npm.collectionVariables.set(\"record_id\", body.id);\n\npm.collectionVariables.set(\"feature\", body.feature)"
+                ]
+              }
             }
-          }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"feature\":\"login\",\n    \"platform\":\"Android\",\n    \"test_types\":[\"normal\"],\n    \"case_count\":1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "generate"
+              ]
+            }
+          },
+          "response": []
         },
-        "url": {
-          "raw": "{{base_url}}/api/v1/generate",
-          "host": [
-            "{{base_url}}"
+        {
+          "name": "02 查询历史列表",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();\npm.test(\"状态码是200\",()=> \n    pm.response.to.have.status(200));\n\npm.test(\"返回的是一个数组”\",()=>{\n    pm.expect(body).to.be.an('array');\n});\n\npm.test(\"列表里有刚生成的那条记录\", () => {\n    const targetId = Number(pm.collectionVariables.get(\"record_id\"));\n    pm.expect(body.some(r => r.id === targetId)).to.be.true;\n});\n\npm.test(\"每条记录的结构完整\", () => {\n    pm.expect(body.every(r => r.id && r.feature && r.cases)).to.be.true;\n});"
+                ]
+              }
+            }
           ],
-          "path": [
-            "api",
-            "v1",
-            "generate"
-          ]
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "03 查询单条记录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"状态码是200\", () => {\n    pm.response.to.have.status(200);\n});\n\nconst body = pm.response.json();\n\npm.test(\"返回结构字段正确\", () => {\n    pm.expect(body).to.be.an(\"Object\"); \n    pm.expect(body).to.include.keys(\"id\", \"feature\", \"platform\",\"test_types\", \"case_count\", \"cases\", \"created_at\");\n    \n    pm.expect(body.feature).to.eql(pm.collectionVariables.get(\"feature\"));\n    });\n\npm.test(\"列表记录iD匹配\", () => {\n    const targetId = Number(pm.collectionVariables.get(\"record_id\"));\n    pm.expect(body.id).to.eql(targetId);\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/{{record_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "history",
+                "{{record_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "04 导出 Markdown",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const md = pm.response.json();\n\npm.test(\"Status code is 200\", function () {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"返回是一段文字\",() => {\n    pm.expect(md).to.be.a(\"string\");\n});\n\npm.test(\"包含 normal 的段落标题\", () => {\n    pm.expect(md).to.include(\"## normal\");\n});\n\npm.test(\"正文有实际内容（>100 字符）\", () => {\n    pm.expect(md.length).to.be.above(100);\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/{{record_id}}/export",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "history",
+                "{{record_id}}",
+                "export"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "05 删除记录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json()\n\npm.test(\"状态是200\",() => {\n    pm.response.to.have.status(200);\n});\n\npm.test(\"提示语有删除成功\",() => {\n    pm.expect(body.message).to.be.eql(\"删除成功\");\n});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/{{record_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "history",
+                "{{record_id}}"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     },
     {
-      "name": "02 查询历史列表",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/history",
-          "host": [
-            "{{base_url}}"
+      "name": "异常流程",
+      "item": [
+        {
+          "name": "E1-01生成参数越界",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();\n\npm.test(\"状态码是422\",() => {\n    pm.response.to.have.status(422);\n});\n\npm.test(\"错误类型是less_than_equal\",() => {\n    pm.expect(body.detail[0].type).to.eql(\"less_than_equal\");\n});\n\npm.test(\"loc包含case_count\",() => {\n    pm.expect(body.detail[0].loc).to.include(\"case_count\");\n});\n\npm.test(\"回显了超限的输入值\",() => {\n    pm.expect(body.detail[0].input).to.eql(4);\n});\n\n\n\n\n"
+                ]
+              }
+            }
           ],
-          "path": [
-            "api",
-            "v1",
-            "history"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "03 查询单条记录",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/history/1",
-          "host": [
-            "{{base_url}}"
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"feature\":\"login\",\n    \"platform\":\"Android\",\n    \"test_types\":[\"normal\"],\n    \"case_count\":4\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E2-01生成缺必填",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();\n\npm.test(\"状态码是422\",() => {\n    pm.response.to.have.status(422);\n});\n\npm.test(\"错误类型是missing\",() => {\n    pm.expect(body.detail[0].type).to.eql(\"missing\");\n});\n\npm.test(\"loc包含feature\",() => {\n    pm.expect(body.detail[0].loc).to.include(\"feature\");\n});\n\n\n\n\n"
+                ]
+              }
+            }
           ],
-          "path": [
-            "api",
-            "v1",
-            "history",
-            "1"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "04 删除记录",
-      "request": {
-        "method": "DELETE",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/history/2",
-          "host": [
-            "{{base_url}}"
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"platform\":\"Android\",\n    \"test_types\":[\"normal\"],\n    \"case_count\":1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E3-01生成参数值为空",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();\n\npm.test(\"状态码是422\",() => {\n    pm.response.to.have.status(422);\n});\n\npm.test(\"错误类型是string_too_short\",() => {\n    pm.expect(body.detail[0].type).to.eql(\"string_too_short\");\n});\n\npm.test(\"loc包含feature\",() => {\n    pm.expect(body.detail[0].loc).to.include(\"feature\");\n});\n"
+                ]
+              }
+            }
           ],
-          "path": [
-            "api",
-            "v1",
-            "history",
-            "2"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
-      "name": "05 导出 Markdown",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/v1/history/1/export",
-          "host": [
-            "{{base_url}}"
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"feature\":\"\",\n    \"platform\":\"Android\",\n    \"test_types\":[\"normal\"],\n    \"case_count\":1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E4-01生成下限0",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();\n\npm.test(\"状态码是422\",() => {\n    pm.response.to.have.status(422);\n});\n\npm.test(\"错误类型是greater_than_equal\",() => {\n    pm.expect(body.detail[0].type).to.eql(\"greater_than_equal\");\n});\n\npm.test(\"loc包含case_count\",() => {\n    pm.expect(body.detail[0].loc).to.include(\"case_count\");\n});\n"
+                ]
+              }
+            }
           ],
-          "path": [
-            "api",
-            "v1",
-            "history",
-            "1",
-            "export"
-          ]
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"feature\":\"login\",\n    \"platform\":\"Android\",\n    \"test_types\":[\"normal\"],\n    \"case_count\":0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/generate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "generate"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "E5-03查询不存在的记录",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();\n\npm.test(\"状态码是404\",() => {\n    pm.response.to.have.status(404);\n});\n\npm.test(\"错误详情是记录不存在\",() => {\n    pm.expect(body.detail).to.include(\"9999\");\n});\n"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/history/9999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "history",
+                "9999"
+              ]
+            }
+          },
+          "response": []
         }
-      },
-      "response": []
+      ]
     }
   ],
   "variable": [
     {
       "key": "base_url",
       "value": "http://127.0.0.1:8000"
+    },
+    {
+      "key": "record_id",
+      "value": ""
+    },
+    {
+      "key": "feature",
+      "value": ""
     }
   ]
 }

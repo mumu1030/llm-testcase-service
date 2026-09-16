@@ -4,7 +4,7 @@ class GenerateRequest(BaseModel):
     feature:str = Field(...,min_length=1)
     platform:str = "Android"
     test_types:list[str] = ["normal","exception","boundary","security"]
-    case_count:int = Field(default=5, ge=1)  # ge=1 表示必须 >= 1
+    case_count:int = Field(default=2, ge=1,le=3)  # ge=1 下限，le=3 上限
 
 class HistoryRecord(BaseModel):
     id: int
