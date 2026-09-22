@@ -1,4 +1,4 @@
-def build_test_case_prompt(feature,platform="Android",test_type="normal",case_count=5,example_case=None):
+def build_test_case_prompt(feature,platform="Android",test_type="normal",case_count=2,example_case=None):
     """构建测试用例prompt
     feature:功能名称
     platform: 平台,Android/iOS/Web
@@ -6,6 +6,7 @@ def build_test_case_prompt(feature,platform="Android",test_type="normal",case_co
     case_count: 生成用例数量
     example_case: 用例参考范例
     """
+
     type_guide = {
         "normal": f"重点覆盖正常业务流程，包含{case_count}条核心场景",
         "exception": f"重点覆盖异常场景（网络/服务器/参数异常），共{case_count}条",
@@ -44,7 +45,7 @@ def build_test_case_prompt(feature,platform="Android",test_type="normal",case_co
 
         f"【任务】为{platform}端-{feature}设计{case_count}条用例\n\n"
 
-        f"【要求】{type_guide.get(test_type,type_guide['normal'])}\n\n"
+        f"【要求】{type_guide.get(test_type, type_guide['normal'])}\n\n" ## 如果传的test_type不存在，不报错，返回 normal 的值（兜底）
 
         f"【格式约束】\n"
         f"1.必须用markdown表格,含6列:编号/标题/前置条件/步骤/预期/优先级\n"
