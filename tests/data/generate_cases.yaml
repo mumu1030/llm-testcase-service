@@ -1,0 +1,47 @@
+- name: 空feature
+  body:
+    feature: ""
+    platform: iOS
+    test_types: [normal]
+    case_count: 1
+
+- name: 缺feature
+  body:
+    platform: iOS
+    test_types: [normal]
+    case_count: 1
+
+- name: count超过3
+  body:
+    feature: login
+    platform: iOS
+    test_types: [normal]
+    case_count: 4
+
+- name: count为0
+  body:
+    feature: login
+    platform: Android
+    test_types: [normal]
+    case_count: 0
+
+- name: types不是列表
+  body:
+    feature: login
+    platform: Android
+    test_types: normal
+    case_count: 1
+
+- name: count为负
+  body:
+    feature: login
+    platform: Android
+    test_types: [normal]
+    case_count: -1
+  
+- name: count为100
+  body:
+    feature: login
+    platform: Android
+    test_types: [normal]
+    case_count: 100
