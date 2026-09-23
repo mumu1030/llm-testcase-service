@@ -13,6 +13,7 @@ output/
 reports/
 allure-results/
 allure-report/
+.pytest_cache/
 
 # IDE 配置文件
 .vscode/
