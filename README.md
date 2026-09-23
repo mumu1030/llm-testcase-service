@@ -38,6 +38,7 @@
 
 - **pytest** 9.1 —— 用例执行
 - **allure-pytest** 2.16 + **Allure CLI** 2.46 —— 报告与失败现场还原
+- **pytest-rerunfailures** 16.7 —— 失败重试（消除网络抖动造成的假失败）
 - **PyYAML** 6.0 —— 数据驱动用例数据
 - **Postman / Newman** —— 手工与命令行回归（依赖 Node.js）
 
@@ -97,7 +98,7 @@ pip install -r requirements.txt
 需要跑自动化测试时，额外安装测试依赖：
 
 ```bash
-pip install pytest allure-pytest pyyaml
+pip install -r requirements-dev.txt
 ```
 
 > Allure 报告还需要本机安装 **Allure CLI**（macOS：`brew install allure`）。
@@ -201,9 +202,18 @@ pytest tests/ -m "not llm" -q
 
 # 指定环境 / 超时（环境变量驱动，无需改代码）
 TEST_ENV=qa TEST_TIMEOUT=5 pytest tests/ -m "not llm" -q
+
+# 实时打印每条请求日志（不管用例过没过）⭐ 排查时用
+pytest tests/ -m "not llm" --log-cli-level=INFO -q
 ```
 
 > ⚠️ 跑之前**必须先启动服务**（`uvicorn main:app --reload`），pytest 只发请求不起服务。
+
+> 📋 **关于日志**：pytest 默认会**收起日志**，只在用例失败时才展示（那段叫 `Captured log`）。
+> 日常跑不用管；**排查时加 `--log-cli-level=INFO`** 让它全程可见。
+> 接口请求成功与否都会记 INFO，只有网络层异常（连不上 / 超时）才记 ERROR。
+>
+> ⚠️ **CI 环境务必加上它** —— CI 里没有浏览器打不开 HTML 报告，终端日志是唯一线索。
 
 ### 生成 Allure 报告
 
@@ -312,7 +322,7 @@ assertions    32    failed 0
 - **生成耗时**：`test_types` 每多一类，就会多调用一次模型，四类全选时耗时较长（取决于模型响应速度），属正常现象。
 - **导出方式**：当前导出接口返回 Markdown 文本字符串，尚未实现文件下载（`Content-Disposition`）。
 - **兼容性**：全部代码已通过 Python 3.9 语法编译检测，3.9 及以上版本均可运行。
-- **测试依赖**：`requirements.txt` 目前只含**服务端**依赖，跑 pytest 需另行安装 pytest / allure-pytest / pyyaml。
+- **测试依赖**：运行依赖在 `requirements.txt`（服务端），测试依赖在 `requirements-dev.txt`（pytest / allure-pytest / PyYAML / pytest-rerunfailures），两者已分开；后者已包含前者，CI 只装一个文件即可。
 
 ---
 
@@ -321,6 +331,6 @@ assertions    32    failed 0
 - [x] 补充接口自动化测试（pytest 框架，18 条用例 + Allure 报告）
 - [ ] 接入 SQLite 持久化，历史数据不丢失
 - [ ] 导出接口升级为文件下载（`.md` 文件）
-- [ ] 测试依赖拆分为 `requirements-dev.txt`，区分运行与开发环境
+- [x] 测试依赖拆分为 `requirements-dev.txt`，区分运行与开发环境
 - [ ] 支持连通性校验与自定义模型（不用 DeepSeek 时的适配）
 - [ ] CI 流水线接入：提交即跑 `-m "not llm"`、发布 Allure 报告

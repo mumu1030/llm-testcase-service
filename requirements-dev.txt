@@ -1,0 +1,14 @@
+# 测试端依赖 —— 只有跑 pytest 才需要，运行服务不需要
+# 安装：pip install -r requirements-dev.txt
+#
+# 第一行 -r requirements.txt 是必需的：
+# 测试用例要用 requests 发请求，而它在运行依赖里。
+# 这样 CI 只装这一个文件就够了，不用装两次。
+
+-r requirements.txt
+
+pytest==9.1.1
+allure-pytest==2.16.0
+PyYAML==6.0.3
+pytest-rerunfailures==16.7    # 失败重试。pytest.ini 里配了 --reruns 2，缺了它连运行都跑不起来：
+                              #   error: unrecognized arguments: --reruns  inifile: pytest.ini
