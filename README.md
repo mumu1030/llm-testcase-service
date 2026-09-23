@@ -325,12 +325,3 @@ assertions    32    failed 0
 - **测试依赖**：运行依赖在 `requirements.txt`（服务端），测试依赖在 `requirements-dev.txt`（pytest / allure-pytest / PyYAML / pytest-rerunfailures），两者已分开；后者已包含前者，CI 只装一个文件即可。
 
 ---
-
-## 后续计划
-
-- [x] 补充接口自动化测试（pytest 框架，18 条用例 + Allure 报告）
-- [ ] 接入 SQLite 持久化，历史数据不丢失
-- [ ] 导出接口升级为文件下载（`.md` 文件）
-- [x] 测试依赖拆分为 `requirements-dev.txt`，区分运行与开发环境
-- [ ] 支持连通性校验与自定义模型（不用 DeepSeek 时的适配）
-- [ ] CI 流水线接入：提交即跑 `-m "not llm"`、发布 Allure 报告
