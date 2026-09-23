@@ -35,6 +35,7 @@ def test_generate_error_detail_points_to_field():
 @allure.feature("用例生成接口")
 @allure.title("单类型生成（调1次模型)")
 @pytest.mark.llm
+@pytest.mark.flaky(reruns=0)
 def test_generate_one_type(cleanup):
     r = generate({"feature":"登录","platform":"iOS","test_types":["normal"],"case_count":1})
     assert r.status_code == 200
@@ -50,6 +51,7 @@ def test_generate_one_type(cleanup):
 @allure.feature("用例生成接口")
 @allure.title("最小参数生成(走默认值,调4次模型)")
 @pytest.mark.llm
+@pytest.mark.flaky(reruns=0)
 def test_generate_minimal(cleanup):
     r = generate({"feature":"登录"})
     assert r.status_code == 200
