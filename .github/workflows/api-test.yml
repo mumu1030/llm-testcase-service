@@ -18,4 +18,4 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: 检查用例能不能被收集
-        run: pytest tests/ -m "not llm" --collect-only -q
+        run: pytest tests/ -m "not llm" --log-cli-level=INFO -q
