@@ -17,5 +17,5 @@ jobs:
       - name: 装依赖
         run: pip install -r requirements-dev.txt
 
-      - name: 检查用例能不能被收集
+      - name: 跑接口用例
         run: pytest tests/ -m "not llm" --log-cli-level=INFO -q
