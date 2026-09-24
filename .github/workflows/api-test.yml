@@ -7,15 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 拉取代码
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: 装Python
         uses: actions/setup-python@v5
         with:
-          python-version:'3.13'
+          python-version: '3.13'
 
       - name: 装依赖
         run: pip install -r requirements-dev.txt
 
       - name: 检查用例能不能被收集
-        run: pytest tests/ -m "not llm" -collect-only -q
+        run: pytest tests/ -m "not llm" --collect-only -q
