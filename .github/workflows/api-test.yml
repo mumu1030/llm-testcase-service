@@ -16,6 +16,21 @@ jobs:
 
       - name: 装依赖
         run: pip install -r requirements-dev.txt
+      
+      - name: 启动被测服务
+        run: |
+          uvicorn main:app --host 127.0.0.1 --port 8000 > /tmp/uvicorn.log 2>&1 &
+          for i in {1..30}; do
+            if curl -s -o /dev/null --max-time 1 http://127.0.0.1:8000/; then
+              echo "第 $i 次探测：服务已就绪"
+              exit 0
+            fi
+            echo "第 $i 次探测：还没好，等 1 秒"
+            sleep 1
+          done
+          echo "====== 30 秒内未就绪,uvicorn 日志 ======"
+          cat /tmp/uvicorn.log
+          exit 1
 
       - name: 跑接口用例
         run: pytest tests/ -m "not llm" --log-cli-level=INFO -q
