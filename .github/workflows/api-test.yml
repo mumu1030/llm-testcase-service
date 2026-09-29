@@ -2,6 +2,11 @@ name: 接口自动化测试
 
 on: [push]
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   api-test:
     runs-on: ubuntu-latest
@@ -41,3 +46,17 @@ jobs:
         with:
           name: allure-results
           path: allure-results/
+      
+      - name: 生成HTML 报告
+        run: |
+          npm install -g allure-commandline
+          allure generate allure-results --clean -o allure-report
+      
+      - name: 上传站点
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: allure-report
+      
+      - name: 发布到GitHub Pages
+        uses: actions/deploy-pages@v5
+    
