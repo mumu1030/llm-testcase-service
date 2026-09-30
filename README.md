@@ -1,5 +1,9 @@
 # LLM 自动生成测试用例服务（llm-testcase-service）
 
+[![CI](https://github.com/mumu1030/llm-testcase-service/actions/workflows/api-test.yml/badge.svg)](https://github.com/mumu1030/llm-testcase-service/actions/workflows/api-test.yml)
+[![测试报告](https://img.shields.io/badge/Allure-%E5%9C%A8%E7%BA%BF%E6%8A%A5%E5%91%8A-orange)](https://mumu1030.github.io/llm-testcase-service/)
+
+
 一个基于 **FastAPI** 的后端服务：输入「功能名 + 平台」，调用 **DeepSeek** 大模型自动生成结构化测试用例（Markdown 表格），并提供生成历史的查询、删除、导出能力。
 
 > 项目定位：可作为独立工具使用，也可作为 **Dify 等 AI 工作流中 HTTP 节点的后端 API**。
