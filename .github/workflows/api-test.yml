@@ -48,15 +48,18 @@ jobs:
           path: allure-results/
       
       - name: 生成HTML 报告
+        if: always()
         run: |
           npm install -g allure-commandline
           allure generate allure-results --clean -o allure-report
       
       - name: 上传站点
+        if: always()
         uses: actions/upload-pages-artifact@v5
         with:
           path: allure-report
       
       - name: 发布到GitHub Pages
+        if: always()
         uses: actions/deploy-pages@v5
     
