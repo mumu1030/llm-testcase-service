@@ -5,7 +5,7 @@ from api import get_record, delete_record, export_record
 @allure.title("获取历史记录,200")
 def test_get_existing_record(make_record):
     r = get_record(make_record)
-    assert r.status_code == 201
+    assert r.status_code == 200
     body = r.json()
     assert body["id"] == make_record
 
